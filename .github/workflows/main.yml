@@ -21,31 +21,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
       - name: Extract Android project
         run: |
           mkdir -p extracted
-          unzip MiniBlender3D_V0_1_Source.zip -d extracted
+          unzip -q MiniBlender3D_V0_1_Source.zip -d extracted
 
       - name: Build APK
         run: |
-          GRADLEW=$(find extracted -type f -name gradlew | head -n 1)
-
-          if [ -z "$GRADLEW" ]; then
-            echo "ERROR: Gradle wrapper not found in ZIP"
-            find extracted -maxdepth 4 -type f | head -n 100
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$GRADLEW")
-          cd "$PROJECT_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          gradle -p extracted :app:assembleDebug
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: MiniBlender3D-APK
-          path: extracted/**/build/outputs/apk/debug/*.apk
+          path: extracted/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           
